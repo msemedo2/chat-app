@@ -20,7 +20,7 @@ import {
 const firebase = require('firebase');
 require('firebase/firestore');
 
-export default class Chat extends Component {
+export default class Chat extends React.Component {
 	constructor() {
 		super();
 		this.state = {

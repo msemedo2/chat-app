@@ -54,54 +54,82 @@ export default class Chat extends React.Component {
 		}
 
 		//Stores and retrieves the chat messages users send
-		this.referenceMessages = firebase.firestore().collection('messages');
-
-		this.referenceMessagesUser = null;
+		this.referenceChatMessages = firebase.firestore().collection('messages');
+		this.referenceUser = null;
 	}
 
 	componentDidMount() {
-		let { name } = this.props.route.params;
+		let name = this.props.route.params.name;
 		this.props.navigation.setOptions({ title: name });
-
-		// Reference to load messages via Firebase
-		this.referenceChatMessages = firebase.firestore().collection('messages');
-
+		//check users connection
 		NetInfo.fetch().then((connection) => {
+			//if online
 			if (connection.isConnected) {
 				this.setState({ isConnected: true });
+
 				console.log('online');
+
+				//listening to authentication
+				this.authUnsubscribe = firebase
+					.auth()
+					.onAuthStateChanged(async (user) => {
+						if (!user) {
+							return await firebase.auth().signInAnonymously();
+						}
+
+						this.setState({
+							uid: user.uid,
+							messages: [],
+							user: {
+								_id: user.uid,
+								name: name,
+								avatar: 'https://placeimg.com/140/140/any',
+							},
+						});
+
+						//listens for updates
+						this.unsubscribe = this.referenceChatMessages
+							.orderBy('createdAt', 'desc')
+							.onSnapshot(this.onCollectionUpdate);
+
+						this.referenceUser = firebase
+							.firestore()
+							.collection('messages')
+							.where('uid', '==', this.state.uid);
+					});
+
+				this.saveMessages();
 			} else {
 				console.log('offline');
+				this.setState({ isConnected: false });
+				this.getMessages();
 			}
-
-			// Authenticates user via Firebase
-			this.authUnsubscribe = firebase.auth().onAuthStateChanged((user) => {
-				if (!user) {
-					firebase.auth().signInAnonymously();
-				}
-				this.setState({
-					uid: user.uid,
-					messages: [],
-					user: {
-						_id: user.uid,
-						name: name,
-						avatar: 'https://placeimg.com/140/140/any',
-					},
-				});
-				this.referenceMessagesUser = firebase
-					.firestore()
-					.collection('messages')
-					.where('uid', '==', this.state.uid);
-
-				// save messages when user online
-				this.saveMessages();
-				this.unsubscribe = this.referenceChatMessages.orderBy(
-					'createdAt',
-					'desc'
-				);
-			});
 		});
 	}
+
+	onCollectionUpdate = (querySnapshot) => {
+		const messages = [];
+		//look through each doc
+		querySnapshot.forEach((doc) => {
+			//get query's data
+			let data = doc.data();
+			messages.push({
+				_id: data._id,
+				text: data.text,
+				createdAt: data.createdAt.toDate(),
+				user: {
+					_id: data.user._id,
+					name: data.user.name,
+					avatar: 'https://placeimg.com/140/140/any',
+				},
+			});
+		});
+
+		this.setState({
+			messages: messages,
+		});
+		this.saveMessages();
+	};
 
 	// save messages to local storage
 	async getMessages() {
@@ -139,7 +167,14 @@ export default class Chat extends React.Component {
 	}
 
 	componentWillUnmount() {
-		this.authUnsubscribe();
+		NetInfo.fetch().then((connection) => {
+			if (connection.isConnected) {
+				//stop authentication
+				this.authUnsubscribe();
+				//stop changes
+				this.unsubscribe();
+			}
+		});
 	}
 
 	// Adds messages to cloud storage

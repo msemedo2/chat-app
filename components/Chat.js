@@ -1,24 +1,10 @@
 import React from 'react';
-import {
-	GiftedChat,
-	Bubble,
-	Send,
-	SystemMessage,
-	InputToolbar,
-} from 'react-native-gifted-chat';
-import {
-	StyleSheet,
-	ScrollView,
-	View,
-	Platform,
-	KeyboardAvoidingView,
-	Text,
-	ImageBackground,
-	TextInput,
-	Button,
-} from 'react-native';
+import { GiftedChat, Bubble, InputToolbar } from 'react-native-gifted-chat';
+import { StyleSheet, View, Platform, KeyboardAvoidingView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
+import MapView from 'react-native-maps';
+import CustomActions from './CustomActions';
 
 //Firestore Database
 const firebase = require('firebase');
@@ -34,6 +20,8 @@ export default class Chat extends React.Component {
 				_id: '',
 				name: '',
 				avatar: '',
+				image: null,
+				location: null,
 			},
 			isConnected: false,
 		};
@@ -122,6 +110,8 @@ export default class Chat extends React.Component {
 					name: data.user.name,
 					avatar: 'https://placeimg.com/140/140/any',
 				},
+				image: data.image || null,
+				location: data.location || null,
 			});
 		});
 
@@ -144,6 +134,7 @@ export default class Chat extends React.Component {
 		}
 	}
 
+	// firebase storage
 	async saveMessages() {
 		try {
 			await AsyncStorage.setItem(
@@ -186,6 +177,8 @@ export default class Chat extends React.Component {
 			text: message.text || '',
 			createdAt: message.createdAt,
 			user: message.user,
+			image: message.image || null,
+			location: message.location || null,
 		});
 	}
 
@@ -220,15 +213,42 @@ export default class Chat extends React.Component {
 		);
 	}
 
+	// creating the circle button
+	renderCustomActions = (props) => {
+		return <CustomActions {...props} />;
+	};
+
+	//Render the map location
+	renderCustomView(props) {
+		const { currentMessage } = props;
+		if (currentMessage.location) {
+			return (
+				<MapView
+					style={{ width: 150, height: 100, borderRadius: 13, margin: 3 }}
+					region={{
+						latitude: currentMessage.location.latitude,
+						longitude: currentMessage.location.longitude,
+						latitudeDelta: 0.0922,
+						longitudeDelta: 0.0421,
+					}}
+				/>
+			);
+		}
+		return null;
+	}
+
 	render() {
 		const { color, name } = this.props.route.params;
 
 		return (
 			<View style={[{ backgroundColor: color }, styles.container]}>
 				<GiftedChat
-					messages={this.state.messages}
 					renderBubble={this.renderBubble.bind(this)}
+					messages={this.state.messages}
+					//Render action is responsible for creating the circle button
+					renderActions={this.renderCustomActions}
 					renderInputToolbar={this.renderInputToolbar.bind(this)}
+					renderCustomView={this.renderCustomView}
 					onSend={(messages) => this.onSend(messages)}
 					user={{
 						_id: this.state.user._id,
@@ -258,7 +278,7 @@ const styles = StyleSheet.create({
 			backgroundColor: '#fff',
 		},
 		right: {
-			backgroundColor: 'green',
+			backgroundColor: '#5e5d5e',
 		},
 	},
 	bubbleText: {
@@ -266,7 +286,7 @@ const styles = StyleSheet.create({
 			color: '#000',
 		},
 		right: {
-			color: '#000',
+			color: '#fff',
 		},
 	},
 });

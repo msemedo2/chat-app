@@ -39,19 +39,15 @@ export default class Start extends React.Component {
 								/>
 								<TouchableOpacity
 									style={[styles.color, styles.colorPurple]}
-									onPress={() => this.setState({ color: '#A491D3' })}
+									onPress={() => this.setState({ color: '#474056' })}
 								/>
 								<TouchableOpacity
-									style={[styles.color, styles.colorBlue]}
-									onPress={() => this.setState({ color: '#23B5D3' })}
+									style={[styles.color, styles.colorGrey]}
+									onPress={() => this.setState({ color: '#8A95A5' })}
 								/>
 								<TouchableOpacity
 									style={[styles.color, styles.colorGreen]}
-									onPress={() => this.setState({ color: '#3EC300' })}
-								/>
-								<TouchableOpacity
-									style={[styles.color, styles.colorOrange]}
-									onPress={() => this.setState({ color: '#F96E46' })}
+									onPress={() => this.setState({ color: '#B9C6AE' })}
 								/>
 							</View>
 						</View>
@@ -140,16 +136,13 @@ const styles = StyleSheet.create({
 		backgroundColor: '#090C08',
 	},
 	colorPurple: {
-		backgroundColor: '#A491D3',
+		backgroundColor: '#474056',
 	},
-	colorBlue: {
-		backgroundColor: '#23B5D3',
+	colorGrey: {
+		backgroundColor: '#8A95A5',
 	},
 	colorGreen: {
-		backgroundColor: '#3EC300',
-	},
-	colorOrange: {
-		backgroundColor: '#F96E46',
+		backgroundColor: '#B9C6AE',
 	},
 	buttonWrapper: {
 		width: '88%',

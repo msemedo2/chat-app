@@ -82,7 +82,7 @@ Chat App is a mobile application using React Native. The app will provide users 
 
 1.  Open your terminal and type
 
-$ git clone {https://github.com/msemedo2/chat-app.git}
+$ git clone {https://github.com/msemedo2/chat-app}
 
 This clones the repo
 
